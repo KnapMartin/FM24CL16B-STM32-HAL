@@ -7,8 +7,13 @@
 
 #include "FM24CL16.h"
 
-static uint8_t sDeviceAddressWrite	= 0xA0;
-static uint8_t sDeviceAddressRead	= 0xA1;
+#include <stdio.h>
+#include <string.h>
+
+static const uint8_t sDeviceAddressWrite	= 0xA0;
+static const uint8_t sDeviceAddressRead		= 0xA1;
+
+static inline FM24CL16State set_head(FM24CL16 *device, const uint8_t page, const uint8_t address);
 
 FM24CL16State FM24CL16_init(FM24CL16 *device)
 {
@@ -205,6 +210,67 @@ FM24CL16State FM24CL16_reset(FM24CL16 *device, const uint8_t value)
 				return FM24CL16_ERROR;
 			}
 		}
+	}
+
+	return FM24CL16_OK;
+}
+
+FM24CL16State FM24CL16_print(FM24CL16 *device, UART_HandleTypeDef *huart)
+{
+	char printBuff[30];
+
+	if (set_head(device, 0, 0) != FM24CL16_OK)
+	{
+		device->m_state = FM24CL16_ERROR;
+		return FM24CL16_ERROR;
+	}
+
+	for (uint8_t page = 0; page < FM24CL16_ADDRESS_PAGE_END; ++page)
+	{
+		for (uint16_t row = 0; row < FM24CL16_ADDRESS_ROW_END; row += 8)
+		{
+			uint8_t addressPageOperation = sDeviceAddressRead;
+			addressPageOperation |= (page << 1);
+			uint8_t bytesToRead[8];
+			// fast read with address latching
+			if (HAL_I2C_Master_Receive(device->m_hi2c, addressPageOperation, bytesToRead, 8, FM24CL16_TIMEOUT) != HAL_OK)
+			{
+				device->m_state = FM24CL16_ERROR;
+				return FM24CL16_ERROR;
+			}
+			sprintf(printBuff, "p: %01X, a: %02X -> ", page, row);
+			HAL_UART_Transmit(huart, (uint8_t*)printBuff, strlen(printBuff), 100);
+			sprintf(printBuff, "%02X %02X %02X %02X %02X %02X %02X %02X\r\n", 	bytesToRead[0],
+																				bytesToRead[1],
+																				bytesToRead[2],
+																				bytesToRead[3],
+																				bytesToRead[4],
+																				bytesToRead[5],
+																				bytesToRead[6],
+																				bytesToRead[7]);
+			HAL_UART_Transmit(huart, (uint8_t*)printBuff, strlen(printBuff), 100);
+		}
+	}
+
+	return FM24CL16_OK;
+}
+
+static inline FM24CL16State set_head(FM24CL16 *device, const uint8_t page, const uint8_t address)
+{
+	if (page >= FM24CL16_ADDRESS_PAGE_END)
+	{
+		device->m_state = FM24CL16_ERROR;
+		return FM24CL16_ERROR;
+	}
+
+	uint8_t addressPageOperation = sDeviceAddressWrite;
+	addressPageOperation |= (page << 1);
+	uint8_t bytesToWrite[1] = {address};
+	device->m_stateHal = HAL_I2C_Master_Transmit(device->m_hi2c, addressPageOperation, bytesToWrite, 1, FM24CL16_TIMEOUT);
+	if (device->m_stateHal != HAL_OK)
+	{
+		device->m_state = FM24CL16_ERROR;
+		return FM24CL16_ERROR;
 	}
 
 	return FM24CL16_OK;

@@ -40,5 +40,6 @@ FM24CL16State FM24CL16_read16(FM24CL16 *device, const uint8_t page, const uint8_
 FM24CL16State FM24CL16_read32(FM24CL16 *device, const uint8_t page, const uint8_t address, uint32_t *data);
 
 FM24CL16State FM24CL16_reset(FM24CL16 *device, const uint8_t value);
+FM24CL16State FM24CL16_print(FM24CL16 *device, UART_HandleTypeDef *huart);
 
 #endif /* FM24CL16_H_ */
