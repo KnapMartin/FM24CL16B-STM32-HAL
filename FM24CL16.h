@@ -10,6 +10,8 @@
 
 #include "main.h"
 
+// TODO: add fast writes for consecutive writes -> return last written address
+
 #define FM24CL16_TIMEOUT 100 // ms
 
 typedef enum
@@ -27,6 +29,9 @@ typedef struct
 
 FM24CL16State FM24CL16_init(FM24CL16 *device);
 FM24CL16State FM24CL16_write8(FM24CL16 *device, const uint8_t page, const uint8_t address, const uint8_t data);
+FM24CL16State FM24CL16_write16(FM24CL16 *device, const uint8_t page, const uint8_t address, const uint16_t data);
+FM24CL16State FM24CL16_write32(FM24CL16 *device, const uint8_t page, const uint8_t address, const uint32_t data);
+
 FM24CL16State FM24CL16_read8(FM24CL16 *device, const uint8_t page, const uint8_t address, uint8_t *data);
 
 
