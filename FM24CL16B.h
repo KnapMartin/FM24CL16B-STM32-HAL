@@ -10,6 +10,9 @@
 
 #include "main.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define FM24CL16B_TIMEOUT 100 // ms
 #define FM24CL16B_ADDRESS_PAGE_END 8
@@ -53,5 +56,9 @@ FM24CL16B_State FM24CL16B_print(FM24CL16B *device, UART_HandleTypeDef *huart);
 FM24CL16B_Test FM24CL16B_test8(FM24CL16B *device);
 FM24CL16B_Test FM24CL16B_test16(FM24CL16B *device);
 FM24CL16B_Test FM24CL16B_test32(FM24CL16B *device);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* FM24CL16B_H_ */
