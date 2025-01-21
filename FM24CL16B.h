@@ -20,11 +20,15 @@ extern "C" {
 
 #define FM24CL16B_INIT 1
 
+#define FM24CL16B_TEST_ENABLE
+
+#ifdef FM24CL16B_TEST_ENABLE
 typedef enum
 {
 	FM24CL16B_PASS,
 	FM24CL16B_FAIL
 } FM24CL16B_Test;
+#endif
 
 typedef enum
 {
@@ -53,9 +57,11 @@ FM24CL16B_State FM24CL16B_read32(FM24CL16B *device, const uint8_t page, const ui
 FM24CL16B_State FM24CL16B_reset(FM24CL16B *device, const uint8_t value);
 FM24CL16B_State FM24CL16B_print(FM24CL16B *device, UART_HandleTypeDef *huart);
 
+#ifdef FM24CL16B_TEST_ENABLE
 FM24CL16B_Test FM24CL16B_test8(FM24CL16B *device);
 FM24CL16B_Test FM24CL16B_test16(FM24CL16B *device);
 FM24CL16B_Test FM24CL16B_test32(FM24CL16B *device);
+#endif
 
 #ifdef __cplusplus
 }

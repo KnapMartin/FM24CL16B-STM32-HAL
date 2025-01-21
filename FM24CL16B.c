@@ -226,6 +226,7 @@ FM24CL16B_State FM24CL16B_print(FM24CL16B *device, UART_HandleTypeDef *huart)
 	return FM24CL16B_OK;
 }
 
+#ifdef FM24CL16B_TEST_ENABLE
 FM24CL16B_Test FM24CL16B_test8(FM24CL16B *device)
 {
 	uint8_t dataWrite = 0x66;
@@ -282,6 +283,7 @@ FM24CL16B_Test FM24CL16B_test32(FM24CL16B *device)
 
 	return FM24CL16B_PASS;
 }
+#endif
 
 static inline FM24CL16B_State set_head(FM24CL16B *device, const uint8_t page, const uint8_t address)
 {
