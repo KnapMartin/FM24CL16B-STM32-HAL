@@ -33,7 +33,7 @@ FM24CL16State FM24CL16_write16(FM24CL16 *device, const uint8_t page, const uint8
 FM24CL16State FM24CL16_write32(FM24CL16 *device, const uint8_t page, const uint8_t address, const uint32_t data);
 
 FM24CL16State FM24CL16_read8(FM24CL16 *device, const uint8_t page, const uint8_t address, uint8_t *data);
-
-
+FM24CL16State FM24CL16_read16(FM24CL16 *device, const uint8_t page, const uint8_t address, uint16_t *data);
+FM24CL16State FM24CL16_read32(FM24CL16 *device, const uint8_t page, const uint8_t address, uint32_t *data);
 
 #endif /* FM24CL16_H_ */
