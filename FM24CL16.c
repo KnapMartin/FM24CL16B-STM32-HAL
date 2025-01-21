@@ -24,7 +24,7 @@ FM24CL16State FM24CL16_init(FM24CL16 *device)
 
 FM24CL16State FM24CL16_write8(FM24CL16 *device, const uint8_t page, const uint8_t address, const uint8_t data)
 {
-	if (page >= 8)
+	if (page >= FM24CL16_ADDRESS_PAGE_END)
 	{
 		device->m_state = FM24CL16_ERROR;
 		return FM24CL16_ERROR;
@@ -45,7 +45,7 @@ FM24CL16State FM24CL16_write8(FM24CL16 *device, const uint8_t page, const uint8_
 
 FM24CL16State FM24CL16_write16(FM24CL16 *device, const uint8_t page, const uint8_t address, const uint16_t data)
 {
-	if (page >= 8)
+	if (page >= FM24CL16_ADDRESS_PAGE_END)
 	{
 		device->m_state = FM24CL16_ERROR;
 		return FM24CL16_ERROR;
@@ -68,7 +68,7 @@ FM24CL16State FM24CL16_write16(FM24CL16 *device, const uint8_t page, const uint8
 
 FM24CL16State FM24CL16_write32(FM24CL16 *device, const uint8_t page, const uint8_t address, const uint32_t data)
 {
-	if (page >= 8)
+	if (page >= FM24CL16_ADDRESS_PAGE_END)
 	{
 		device->m_state = FM24CL16_ERROR;
 		return FM24CL16_ERROR;
@@ -93,7 +93,7 @@ FM24CL16State FM24CL16_write32(FM24CL16 *device, const uint8_t page, const uint8
 
 FM24CL16State FM24CL16_read8(FM24CL16 *device, const uint8_t page, const uint8_t address, uint8_t *data)
 {
-	if (page >= 8)
+	if (page >= FM24CL16_ADDRESS_PAGE_END)
 	{
 		device->m_state = FM24CL16_ERROR;
 		return FM24CL16_ERROR;
@@ -122,7 +122,7 @@ FM24CL16State FM24CL16_read8(FM24CL16 *device, const uint8_t page, const uint8_t
 
 FM24CL16State FM24CL16_read16(FM24CL16 *device, const uint8_t page, const uint8_t address, uint16_t *data)
 {
-	if (page >= 8)
+	if (page >= FM24CL16_ADDRESS_PAGE_END)
 	{
 		device->m_state = FM24CL16_ERROR;
 		return FM24CL16_ERROR;
@@ -155,7 +155,7 @@ FM24CL16State FM24CL16_read16(FM24CL16 *device, const uint8_t page, const uint8_
 
 FM24CL16State FM24CL16_read32(FM24CL16 *device, const uint8_t page, const uint8_t address, uint32_t *data)
 {
-	if (page >= 8)
+	if (page >= FM24CL16_ADDRESS_PAGE_END)
 	{
 		device->m_state = FM24CL16_ERROR;
 		return FM24CL16_ERROR;
@@ -180,10 +180,32 @@ FM24CL16State FM24CL16_read32(FM24CL16 *device, const uint8_t page, const uint8_
 		return FM24CL16_ERROR;
 	}
 
-	*data = recData[0] << 24;
-	*data = recData[1] << 16;
-	*data = recData[2] << 8;
-	*data |= recData[3];
+	*data = (uint32_t)(recData[0] << 24);
+	*data = (uint32_t)(recData[1] << 16);
+	*data = (uint32_t)(recData[2] << 8);
+	*data |= (uint32_t)recData[3];
+
+	return FM24CL16_OK;
+}
+
+FM24CL16State FM24CL16_reset(FM24CL16 *device, const uint8_t value)
+{
+	uint32_t memValue = 0;
+	memValue |= (uint32_t)(value << 24);
+	memValue |= (uint32_t)(value << 16);
+	memValue |= (uint32_t)(value << 8);
+	memValue |= (uint32_t)value;
+	for (uint8_t page = 0; page < FM24CL16_ADDRESS_PAGE_END; ++page)
+	{
+		for (uint16_t row = 0; row < FM24CL16_ADDRESS_ROW_END; row += 4)
+		{
+			if (FM24CL16_write32(device, page, row, memValue) != FM24CL16_OK)
+			{
+				device->m_state = FM24CL16_ERROR;
+				return FM24CL16_ERROR;
+			}
+		}
+	}
 
 	return FM24CL16_OK;
 }
