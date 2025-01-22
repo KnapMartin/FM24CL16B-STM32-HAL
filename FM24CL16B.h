@@ -15,8 +15,6 @@ extern "C" {
 #endif
 
 #define FM24CL16B_TIMEOUT 100 // ms
-#define FM24CL16B_ADDRESS_PAGE_END 8
-#define FM24CL16B_ADDRESS_ROW_END 256
 #define FM24CL16B_ADDRESS_END (uint16_t)2047
 
 #define FM24CL16B_INIT 1
@@ -43,6 +41,8 @@ typedef enum
 typedef struct
 {
 	I2C_HandleTypeDef *m_hi2c;
+	uint8_t m_bufferTx[8];
+	uint8_t m_bufferRx[8];
 } FM24CL16B;
 
 FM24CL16B_State FM24CL16B_init(FM24CL16B *device, I2C_HandleTypeDef *hi2c); // TODO: add tests
