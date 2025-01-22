@@ -17,6 +17,7 @@ extern "C" {
 #define FM24CL16B_TIMEOUT 100 // ms
 #define FM24CL16B_ADDRESS_PAGE_END 8
 #define FM24CL16B_ADDRESS_ROW_END 256
+#define FM24CL16B_ADDRESS_END (uint16_t)2047
 
 #define FM24CL16B_INIT 1
 
@@ -44,15 +45,15 @@ typedef struct
 	I2C_HandleTypeDef *m_hi2c;
 } FM24CL16B;
 
-FM24CL16B_State FM24CL16B_init(FM24CL16B *device, I2C_HandleTypeDef *hi2c);
+FM24CL16B_State FM24CL16B_init(FM24CL16B *device, I2C_HandleTypeDef *hi2c); // TODO: add tests
 
-FM24CL16B_State FM24CL16B_write8(FM24CL16B *device, const uint8_t page, const uint8_t address, const uint8_t data);
-FM24CL16B_State FM24CL16B_write16(FM24CL16B *device, const uint8_t page, const uint8_t address, const uint16_t data);
-FM24CL16B_State FM24CL16B_write32(FM24CL16B *device, const uint8_t page, const uint8_t address, const uint32_t data);
+FM24CL16B_State FM24CL16B_write8(FM24CL16B *device, const uint16_t address, const uint8_t data);
+FM24CL16B_State FM24CL16B_write16(FM24CL16B *device, const uint16_t address, const uint16_t data);
+FM24CL16B_State FM24CL16B_write32(FM24CL16B *device, const uint16_t address, const uint32_t data);
 
-FM24CL16B_State FM24CL16B_read8(FM24CL16B *device, const uint8_t page, const uint8_t address, uint8_t *data);
-FM24CL16B_State FM24CL16B_read16(FM24CL16B *device, const uint8_t page, const uint8_t address, uint16_t *data);
-FM24CL16B_State FM24CL16B_read32(FM24CL16B *device, const uint8_t page, const uint8_t address, uint32_t *data);
+FM24CL16B_State FM24CL16B_read8(FM24CL16B *device, const uint16_t address, uint8_t *data);
+FM24CL16B_State FM24CL16B_read16(FM24CL16B *device, const uint16_t address, uint16_t *data);
+FM24CL16B_State FM24CL16B_read32(FM24CL16B *device, const uint16_t address, uint32_t *data);
 
 FM24CL16B_State FM24CL16B_reset(FM24CL16B *device, const uint8_t value);
 FM24CL16B_State FM24CL16B_print(FM24CL16B *device, UART_HandleTypeDef *huart);
