@@ -15,8 +15,6 @@ extern "C" {
 #endif
 
 #define FM24CL16B_TIMEOUT 100 // ms
-#define FM24CL16B_ADDRESS_PAGE_END 8
-#define FM24CL16B_ADDRESS_ROW_END 256
 #define FM24CL16B_ADDRESS_END (uint16_t)2047
 
 #define FM24CL16B_INIT 1
