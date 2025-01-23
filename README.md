@@ -26,7 +26,7 @@ Read
 
 ```
 uint8_t readData;
-if (FM24CL16B_write8(&fram, 0x77, &readData) != FM24CL16B_OK)
+if (FM24CL16B_read8(&fram, 0x77, &readData) != FM24CL16B_OK)
 {
     // handle error
 }
