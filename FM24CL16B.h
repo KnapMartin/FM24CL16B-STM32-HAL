@@ -1,7 +1,7 @@
 /*
- * FM24CL16.h
+ * FM24CL16B.h
  *
- *  Created on: Jan 21, 2025
+ *  Created on: Jan 23, 2025
  *      Author: knap-linux
  */
 
@@ -10,62 +10,57 @@
 
 #include "main.h"
 
-#ifdef __cplusplus
-extern "C" {
+#define FM24CL16B_TEST // disable compilation of tests
+
+class FM24CL16B
+{
+public:
+	FM24CL16B(I2C_HandleTypeDef *hi2c = nullptr);
+	virtual ~FM24CL16B();
+
+	enum class State
+	{
+		Ok,
+		Error,
+		ErrorTx,
+		ErrorRx,
+		ErrorUart,
+	};
+
+#ifdef FM24CL16B_TEST
+	enum class Test
+	{
+		Pass,
+		Fail
+	};
 #endif
 
-#define FM24CL16B_TIMEOUT 100 // ms
-#define FM24CL16B_ADDRESS_END (uint16_t)2047
+	State write(const uint16_t address, const uint8_t data);
+	State write(const uint16_t address, const uint16_t data);
+	State write(const uint16_t address, const uint32_t data);
 
-#define FM24CL16B_INIT 1
+	State read(const uint16_t address, uint8_t *data);
+	State read(const uint16_t address, uint16_t *data);
+	State read(const uint16_t address, uint32_t *data);
 
-#define FM24CL16B_TEST_ENABLE
+	void dbg_print_buff_rx(UART_HandleTypeDef *huart);
 
-#ifdef FM24CL16B_TEST_ENABLE
-typedef enum
-{
-	FM24CL16B_PASS,
-	FM24CL16B_FAIL
-} FM24CL16B_Test;
+	State reset(const uint32_t data);
+	State print(UART_HandleTypeDef *huart);
+
+#ifdef FM24CL16B_TEST
+	Test test8();
+	Test test16();
+	Test test32();
 #endif
 
-typedef enum
-{
-	FM24CL16B_OK,
-	FM24CL16B_ERROR,
-	FM24CL16B_ERROR_TX,
-	FM24CL16B_ERROR_RX,
-	FM24CL16B_ERROR_UART
-} FM24CL16B_State;
+private:
+	inline State setHead(const uint16_t address);
 
-typedef struct
-{
 	I2C_HandleTypeDef *m_hi2c;
-	uint8_t m_bufferTx[8];
 	uint8_t m_bufferRx[8];
-} FM24CL16B;
+	uint8_t m_bufferTx[8];
 
-FM24CL16B_State FM24CL16B_init(FM24CL16B *device, I2C_HandleTypeDef *hi2c); // TODO: add tests
-
-FM24CL16B_State FM24CL16B_write8(FM24CL16B *device, const uint16_t address, const uint8_t data);
-FM24CL16B_State FM24CL16B_write16(FM24CL16B *device, const uint16_t address, const uint16_t data);
-FM24CL16B_State FM24CL16B_write32(FM24CL16B *device, const uint16_t address, const uint32_t data);
-
-FM24CL16B_State FM24CL16B_read8(FM24CL16B *device, const uint16_t address, uint8_t *data);
-FM24CL16B_State FM24CL16B_read16(FM24CL16B *device, const uint16_t address, uint16_t *data);
-FM24CL16B_State FM24CL16B_read32(FM24CL16B *device, const uint16_t address, uint32_t *data);
-
-FM24CL16B_State FM24CL16B_reset(FM24CL16B *device, const uint8_t value);
-FM24CL16B_State FM24CL16B_print(FM24CL16B *device, UART_HandleTypeDef *huart);
-
-#ifdef FM24CL16B_TEST_ENABLE
-FM24CL16B_Test FM24CL16B_test8(FM24CL16B *device);
-FM24CL16B_Test FM24CL16B_test16(FM24CL16B *device);
-FM24CL16B_Test FM24CL16B_test32(FM24CL16B *device);
-#endif
-
-#ifdef __cplusplus
-}
-#endif
+};
 
 #endif /* FM24CL16B_H_ */
