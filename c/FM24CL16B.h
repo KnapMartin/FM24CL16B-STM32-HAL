@@ -45,7 +45,8 @@ typedef struct
 	uint8_t m_bufferRx[8];
 } FM24CL16B;
 
-FM24CL16B_State FM24CL16B_init(FM24CL16B *device, I2C_HandleTypeDef *hi2c); // TODO: add tests
+FM24CL16B_State FM24CL16B_init(FM24CL16B *device, I2C_HandleTypeDef *hi2c);
+FM24CL16B_State FM24CL16B_deinit(FM24CL16B *device);
 
 FM24CL16B_State FM24CL16B_write8(FM24CL16B *device, const uint16_t address, const uint8_t data);
 FM24CL16B_State FM24CL16B_write16(FM24CL16B *device, const uint16_t address, const uint16_t data);

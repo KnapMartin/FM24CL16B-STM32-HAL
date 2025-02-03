@@ -24,6 +24,14 @@ FM24CL16B_State FM24CL16B_init(FM24CL16B *device, I2C_HandleTypeDef *hi2c)
 	return FM24CL16B_OK;
 }
 
+FM24CL16B_State FM24CL16B_deinit(FM24CL16B *device)
+{
+	device->m_hi2c = NULL;
+	sInit = 0;
+
+	return FM24CL16B_OK;
+}
+
 FM24CL16B_State FM24CL16B_write8(FM24CL16B *device, const uint16_t address, const uint8_t data)
 {
 	if (sInit != FM24CL16B_INIT) return FM24CL16B_ERROR;
