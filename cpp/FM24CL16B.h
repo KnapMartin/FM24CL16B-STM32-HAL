@@ -41,9 +41,7 @@ public:
 
 	State read(const uint16_t address, uint8_t *data);
 	State read(const uint16_t address, uint16_t *data);
-	State read(const uint16_t address, uint32_t *data);
-
-	void dbg_print_buff_rx(UART_HandleTypeDef *huart);
+	State read(const uint16_t address, uint32_t *data):
 
 	State reset(const uint32_t data);
 	State print(UART_HandleTypeDef *huart);

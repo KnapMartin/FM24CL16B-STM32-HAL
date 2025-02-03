@@ -366,17 +366,3 @@ inline FM24CL16B::State FM24CL16B::setHead(const uint16_t address)
 
 	return State::Ok;
 }
-
-void FM24CL16B::dbg_print_buff_rx(UART_HandleTypeDef *huart)
-{
-	char printBuff[30];
-	sprintf(printBuff, "%02X %02X %02X %02X %02X %02X %02X %02X\r\n", 	m_bufferRx[0],
-					m_bufferRx[1],
-					m_bufferRx[2],
-					m_bufferRx[3],
-					m_bufferRx[4],
-					m_bufferRx[5],
-					m_bufferRx[6],
-					m_bufferRx[7]);
-	HAL_UART_Transmit(huart, (uint8_t*)printBuff, strlen(printBuff), 100);
-}
