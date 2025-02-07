@@ -42,9 +42,23 @@ FM24CL16B_State FM24CL16B_write8(FM24CL16B *device, const uint16_t address, cons
 
 	uint8_t address_page_operation = s_device_address_write;
 	address_page_operation |= (page << 1);
+
+#ifdef FM24CL16B_INTERRUPTS
+	uint32_t timeout = HAL_GetTick() + FM24CL16B_TIMEOUT;
+	while (device->m_hi2c->State != HAL_I2C_STATE_READY)
+	{
+		if (HAL_GetTick() > timeout) return FM24CL16B_ERROR_TIMEOUT;
+	}
+#endif
+
 	device->m_data_tx[0] = row;
 	device->m_data_tx[1] = data;
+
+#ifdef FM24CL16B_INTERRUPTS
+	if (HAL_I2C_Master_Transmit_IT(device->m_hi2c, address_page_operation, device->m_data_tx, 2) != HAL_OK)
+#else
 	if (HAL_I2C_Master_Transmit(device->m_hi2c, address_page_operation, device->m_data_tx, 2, FM24CL16B_TIMEOUT) != HAL_OK)
+#endif
 	{
 		return FM24CL16B_ERROR_TX;
 	}
@@ -64,10 +78,24 @@ FM24CL16B_State FM24CL16B_write16(FM24CL16B *device, const uint16_t address, con
 	address_page_operation |= (page << 1);
 	uint8_t data0 = (uint8_t)(data >> 8);
 	uint8_t data1 = (uint8_t)(data & 0xFF);
+
+#ifdef FM24CL16B_INTERRUPTS
+	uint32_t timeout = HAL_GetTick() + FM24CL16B_TIMEOUT;
+	while (device->m_hi2c->State != HAL_I2C_STATE_READY)
+	{
+		if (HAL_GetTick() > timeout) return FM24CL16B_ERROR_TIMEOUT;
+	}
+#endif
+
 	device->m_data_tx[0] = row;
 	device->m_data_tx[1] = data0;
 	device->m_data_tx[2] = data1;
+
+#ifdef FM24CL16B_INTERRUPTS
+	if (HAL_I2C_Master_Transmit_IT(device->m_hi2c, address_page_operation, device->m_data_tx, 3) != HAL_OK)
+#else
 	if (HAL_I2C_Master_Transmit(device->m_hi2c, address_page_operation, device->m_data_tx, 3, FM24CL16B_TIMEOUT) != HAL_OK)
+#endif
 	{
 		return FM24CL16B_ERROR_TX;
 	}
@@ -89,12 +117,26 @@ FM24CL16B_State FM24CL16B_write32(FM24CL16B *device, const uint16_t address, con
 	uint8_t data1 = (uint8_t)(data >> 16);
 	uint8_t data2 = (uint8_t)(data >> 8);
 	uint8_t data3 = (uint8_t)(data & 0xFF);
+
+#ifdef FM24CL16B_INTERRUPTS
+	uint32_t timeout = HAL_GetTick() + FM24CL16B_TIMEOUT;
+	while (device->m_hi2c->State != HAL_I2C_STATE_READY)
+	{
+		if (HAL_GetTick() > timeout) return FM24CL16B_ERROR_TIMEOUT;
+	}
+#endif
+
 	device->m_data_tx[0] = row;
 	device->m_data_tx[1] = data0;
 	device->m_data_tx[2] = data1;
 	device->m_data_tx[3] = data2;
 	device->m_data_tx[4] = data3;
+
+#ifdef FM24CL16B_INTERRUPTS
+	if (HAL_I2C_Master_Transmit_IT(device->m_hi2c, address_page_operation, device->m_data_tx, 5) != HAL_OK)
+#else
 	if (HAL_I2C_Master_Transmit(device->m_hi2c, address_page_operation, device->m_data_tx, 5, FM24CL16B_TIMEOUT) != HAL_OK)
+#endif
 	{
 		return FM24CL16B_ERROR_TX;
 	}
@@ -113,6 +155,15 @@ FM24CL16B_State FM24CL16B_read8(FM24CL16B *device, const uint16_t address, uint8
 	uint8_t address_page_operation = s_device_address_read;
 	address_page_operation |= (page << 1);
 	device->m_data_tx[0] = row;
+
+#ifdef FM24CL16B_INTERRUPTS
+	uint32_t timeout = HAL_GetTick() + FM24CL16B_TIMEOUT;
+	while (device->m_hi2c->State != HAL_I2C_STATE_READY)
+	{
+		if (HAL_GetTick() > timeout) return FM24CL16B_ERROR_TIMEOUT;
+	}
+#endif
+
 	if (HAL_I2C_Master_Transmit(device->m_hi2c, address_page_operation, device->m_data_tx, 1, FM24CL16B_TIMEOUT) != HAL_OK)
 	{
 		return FM24CL16B_ERROR_TX;
@@ -137,6 +188,15 @@ FM24CL16B_State FM24CL16B_read16(FM24CL16B *device, const uint16_t address, uint
 	uint8_t address_page_operation = s_device_address_read;
 	address_page_operation |= (page << 1);
 	device->m_data_tx[0] = row;
+
+#ifdef FM24CL16B_INTERRUPTS
+	uint32_t timeout = HAL_GetTick() + FM24CL16B_TIMEOUT;
+	while (device->m_hi2c->State != HAL_I2C_STATE_READY)
+	{
+		if (HAL_GetTick() > timeout) return FM24CL16B_ERROR_TIMEOUT;
+	}
+#endif
+
 	if (HAL_I2C_Master_Transmit(device->m_hi2c, address_page_operation, device->m_data_tx, 1, FM24CL16B_TIMEOUT) != HAL_OK)
 	{
 		return FM24CL16B_ERROR_TX;
@@ -164,6 +224,15 @@ FM24CL16B_State FM24CL16B_read32(FM24CL16B *device, const uint16_t address, uint
 	uint8_t address_page_operation = s_device_address_read;
 	address_page_operation |= (page << 1);
 	device->m_data_tx[0] = row;
+
+#ifdef FM24CL16B_INTERRUPTS
+	uint32_t timeout = HAL_GetTick() + FM24CL16B_TIMEOUT;
+	while (device->m_hi2c->State != HAL_I2C_STATE_READY)
+	{
+		if (HAL_GetTick() > timeout) return FM24CL16B_ERROR_TIMEOUT;
+	}
+#endif
+
 	if (HAL_I2C_Master_Transmit(device->m_hi2c, address_page_operation, device->m_data_tx, 1, FM24CL16B_TIMEOUT) != HAL_OK)
 	{
 		return FM24CL16B_ERROR_TX;
@@ -205,6 +274,14 @@ FM24CL16B_State FM24CL16B_print(FM24CL16B *device, UART_HandleTypeDef *huart)
 	if (s_init != FM24CL16B_INIT) return FM24CL16B_ERROR;
 
 	char print_buff[30];
+
+#ifdef FM24CL16B_INTERRUPTS
+	uint32_t timeout = HAL_GetTick() + FM24CL16B_TIMEOUT;
+	while (device->m_hi2c->State != HAL_I2C_STATE_READY)
+	{
+		if (HAL_GetTick() > timeout) return FM24CL16B_ERROR_TIMEOUT;
+	}
+#endif
 
 	if (set_head(device, 0) != FM24CL16B_OK)
 	{
