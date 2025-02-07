@@ -10,7 +10,11 @@
 
 #include "main.h"
 
-#define FM24CL16B_TEST // disable compilation of tests
+#define FM24CL16B_VERSION "0.1.0"
+
+#define FM24CL16B_TEST // toggle test
+
+#define FM24CL16B_INTERRUPTS // toggle interrupts
 
 class FM24CL16B
 {
@@ -20,16 +24,19 @@ public:
 
 	enum class State
 	{
+		None,
 		Ok,
 		Error,
 		ErrorTx,
 		ErrorRx,
 		ErrorUart,
+		ErrorTimeout
 	};
 
 #ifdef FM24CL16B_TEST
 	enum class Test
 	{
+		None,
 		Pass,
 		Fail
 	};
@@ -41,7 +48,7 @@ public:
 
 	State read(const uint16_t address, uint8_t *data);
 	State read(const uint16_t address, uint16_t *data);
-	State read(const uint16_t address, uint32_t *data):
+	State read(const uint16_t address, uint32_t *data);
 
 	State reset(const uint32_t data);
 	State print(UART_HandleTypeDef *huart);
