@@ -14,14 +14,14 @@ extern "C" {
 
 #include "main.h"
 
-#define FM24CL16B_VERSION "0.2.0"
+#define FM24CL16B_VERSION "0.2.1"
 #define FM24CL16B_DEFAULT_TIMEOUT (uint32_t)100 // ms
-#define FM24CL16B_INTERRUPT 1
+#define FM24CL16B_INTERRUPT 0
 #define FM24CL16B_MAX_ADDRESS (uint32_t)2047 // bytes
 #define FM24CL16B_BUFFLEN_RX 64
 #define FM24CL16B_BUFFLEN_TX 64
 #define FM24CL16B_WRITE_LEN (uint32_t)32 // must be smaller than bufflen
-#define FM24CL16B_PRINT 1
+#define FM24CL16B_PRINT 0
 #define FM24CL16B_CMSIS_OS2 0
 #if FM24CL16B_PRINT == 1
 #define FM24CL16B_TIMEOUT_UART (uint32_t)100 // ms
@@ -61,11 +61,6 @@ struct FM24CL16B
 	uint32_t m_timeout_mutex;
 #endif
 
-#if FM24CL16B_CMSIS_OS2 == 1
-	FM24CL16B_State (*init)(struct FM24CL16B *self, I2C_HandleTypeDef *hi2c, osMutexId_t *mutex_handle);
-#else
-	FM24CL16B_State (*init)(struct FM24CL16B *self, I2C_HandleTypeDef *hi2c);
-#endif
 	FM24CL16B_State (*deinit)(struct FM24CL16B *self);
 	FM24CL16B_State (*write)(struct FM24CL16B *self, const uint32_t address, const uint8_t *data, const size_t len);
 	FM24CL16B_State (*read)(struct FM24CL16B *self, const uint32_t address, uint8_t *data, const size_t len);
@@ -79,14 +74,6 @@ struct FM24CL16B
 FM24CL16B_State FM24CL16B_init(struct FM24CL16B *self, I2C_HandleTypeDef *hi2c, osMutexId_t *mutex_handle);
 #else
 FM24CL16B_State FM24CL16B_init(struct FM24CL16B *self, I2C_HandleTypeDef *hi2c);
-#endif
-FM24CL16B_State FM24CL16B_deinit(struct FM24CL16B *self);
-FM24CL16B_State FM24CL16B_write(struct FM24CL16B *self, const uint32_t address, const uint8_t *data, const size_t len);
-FM24CL16B_State FM24CL16B_read(struct FM24CL16B *self, const uint32_t address, uint8_t *data, const size_t len);
-FM24CL16B_State FM24CL16B_reset(struct FM24CL16B *self, const uint8_t value);
-
-#if FM24CL16B_PRINT == 1
-FM24CL16B_State FM24CL16B_print(FM24CL16B *self, UART_HandleTypeDef *huart);
 #endif
 
 #ifdef __cplusplus

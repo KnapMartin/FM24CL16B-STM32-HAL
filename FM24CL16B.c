@@ -15,6 +15,14 @@
 static const uint8_t s_device_address_write	= 0xA0;
 static const uint8_t s_device_address_read	= 0xA1;
 
+static FM24CL16B_State deinit(struct FM24CL16B *self);
+static FM24CL16B_State write(struct FM24CL16B *self, const uint32_t address, const uint8_t *data, const size_t len);
+static FM24CL16B_State read(struct FM24CL16B *self, const uint32_t address, uint8_t *data, const size_t len);
+static FM24CL16B_State reset(struct FM24CL16B *self, const uint8_t value);
+#if FM24CL16B_PRINT == 1
+static FM24CL16B_State print(FM24CL16B *self, UART_HandleTypeDef *huart);
+#endif
+
 /**
  * @brief Initialize device object.
  *
@@ -30,12 +38,19 @@ FM24CL16B_State FM24CL16B_init(struct FM24CL16B *self, I2C_HandleTypeDef *hi2c)
 #endif
 {
 	self->m_hi2c = hi2c;
-	self->m_init = 1;
 	self->m_timeout = FM24CL16B_DEFAULT_TIMEOUT;
 #if FM24CL16B_CMSIS_OS2 == 1
 	self->m_mutex_handle = mutex_handle;
 	self->m_timeout_mutex = osWaitForever;
 #endif
+	self->deinit = deinit;
+	self->write = write;
+	self->read = read;
+	self->reset = reset;
+#if FM24CL16B_PRINT == 1
+	self->print = print;
+#endif
+	self->m_init = 1;
 
 	return FM24CL16B_OK;
 }
@@ -46,7 +61,7 @@ FM24CL16B_State FM24CL16B_init(struct FM24CL16B *self, I2C_HandleTypeDef *hi2c)
  * @param self Device object pointer.
  * @return FM24CL16B_State
  */
-FM24CL16B_State FM24CL16B_deinit(struct FM24CL16B *self)
+static FM24CL16B_State deinit(struct FM24CL16B *self)
 {
 	self->m_hi2c = NULL;
 	self->m_init = 0;
@@ -66,7 +81,7 @@ FM24CL16B_State FM24CL16B_deinit(struct FM24CL16B *self)
  * @param len Length of data to be written.
  * @return FM24CL16B_State
  */
-FM24CL16B_State FM24CL16B_write(struct FM24CL16B *self, const uint32_t address, const uint8_t *data, const size_t len)
+static FM24CL16B_State write(struct FM24CL16B *self, const uint32_t address, const uint8_t *data, const size_t len)
 {
 	if (!self->m_init) return FM24CL16B_ERROR_INIT;
 	if (address + len - 1 > FM24CL16B_MAX_ADDRESS) return FM24CL16B_ERROR_ADDRESS;
@@ -131,7 +146,7 @@ FM24CL16B_State FM24CL16B_write(struct FM24CL16B *self, const uint32_t address, 
  * @param len Length of data to be read.
  * @return FM24CL16B_State
  */
-FM24CL16B_State FM24CL16B_read(struct FM24CL16B *self, const uint32_t address, uint8_t *data, const size_t len)
+static FM24CL16B_State read(struct FM24CL16B *self, const uint32_t address, uint8_t *data, const size_t len)
 {
 	if (!self->m_init) return FM24CL16B_ERROR_INIT;
 	if (address + len - 1 > FM24CL16B_MAX_ADDRESS) return FM24CL16B_ERROR_ADDRESS;
@@ -198,7 +213,7 @@ FM24CL16B_State FM24CL16B_read(struct FM24CL16B *self, const uint32_t address, u
  * @param value Value to be set.
  * @return FM24CL16B_State
  */
-FM24CL16B_State FM24CL16B_reset(struct FM24CL16B *self, const uint8_t value)
+static FM24CL16B_State reset(struct FM24CL16B *self, const uint8_t value)
 {
     if (!self->m_init) return FM24CL16B_ERROR_INIT;
 
@@ -253,7 +268,7 @@ FM24CL16B_State FM24CL16B_reset(struct FM24CL16B *self, const uint8_t value)
  * @param huart HAL UART handle pointer.
  * @return FM24CL16B_State
  */
-FM24CL16B_State FM24CL16B_print(struct FM24CL16B *self, UART_HandleTypeDef *huart)
+static FM24CL16B_State print(struct FM24CL16B *self, UART_HandleTypeDef *huart)
 {
 	if (!self->m_init) return FM24CL16B_ERROR_INIT;
 
