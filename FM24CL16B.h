@@ -14,7 +14,7 @@ extern "C" {
 
 #include "main.h"
 
-#define FM24CL16B_VERSION "0.1.1"
+#define FM24CL16B_VERSION "0.1.2"
 #define FM24CL16B_DEFAULT_TIMEOUT (uint32_t)100 // ms
 #define FM24CL16B_INTERRUPT 1
 #define FM24CL16B_MAX_ADDRESS (uint32_t)2047 // bytes

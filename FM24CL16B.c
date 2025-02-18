@@ -12,8 +12,8 @@
 #include <stdio.h>
 #endif
 
-static const uint8_t s_deviceAddressWrite	= 0xA0;
-static const uint8_t s_deviceAddressRead	= 0xA1;
+static const uint8_t s_device_address_write	= 0xA0;
+static const uint8_t s_device_address_read	= 0xA1;
 
 /**
  * @brief Initialize device object.
@@ -69,17 +69,17 @@ FM24CL16B_State FM24CL16B_write(struct FM24CL16B *self, const uint32_t address, 
 #endif
 
 	uint8_t page = (address >> 8) & 0x07;
-	uint8_t addressPageOperation = s_deviceAddressWrite;
-	addressPageOperation |= (page << 1);
+	uint8_t address_page_operation = s_device_address_write;
+	address_page_operation |= (page << 1);
 
 	self->m_data_tx[0] = (uint8_t)(address & 0xFF);
 
 	memcpy(&self->m_data_tx[1], data, len);
 
 #if FM24CL16B_INTERRUPT == 1
-	if (HAL_I2C_Master_Transmit_IT(self->m_hi2c, addressPageOperation, self->m_data_tx, len + 1) != HAL_OK)
+	if (HAL_I2C_Master_Transmit_IT(self->m_hi2c, address_page_operation, self->m_data_tx, len + 1) != HAL_OK)
 #else
-	if (HAL_I2C_Master_Transmit(self->m_hi2c, addressPageOperation, self->m_data_tx, len + 1, self->m_timeout) != HAL_OK)
+	if (HAL_I2C_Master_Transmit(self->m_hi2c, address_page_operation, self->m_data_tx, len + 1, self->m_timeout) != HAL_OK)
 #endif
 	{
 		return FM24CL16B_ERROR_TX;
@@ -111,17 +111,17 @@ FM24CL16B_State FM24CL16B_read(struct FM24CL16B *self, const uint32_t address, u
 #endif
 
 	uint8_t page = (address >> 8) & 0x07;
-	uint8_t addressPageOperation = s_deviceAddressRead;
-	addressPageOperation |= (page << 1);
+	uint8_t address_page_operation = s_device_address_read;
+	address_page_operation |= (page << 1);
 
 	self->m_data_tx[0] = (uint8_t)(address & 0xFF);
 
-	if (HAL_I2C_Master_Transmit(self->m_hi2c, addressPageOperation, self->m_data_tx, 1, self->m_timeout) != HAL_OK)
+	if (HAL_I2C_Master_Transmit(self->m_hi2c, address_page_operation, self->m_data_tx, 1, self->m_timeout) != HAL_OK)
 	{
 		return FM24CL16B_ERROR_TX;
 	}
 
-	if (HAL_I2C_Master_Receive(self->m_hi2c, addressPageOperation, self->m_data_rx, len, self->m_timeout) != HAL_OK)
+	if (HAL_I2C_Master_Receive(self->m_hi2c, address_page_operation, self->m_data_rx, len, self->m_timeout) != HAL_OK)
 	{
 		return FM24CL16B_ERROR_RX;
 	}
@@ -142,23 +142,23 @@ FM24CL16B_State FM24CL16B_reset(struct FM24CL16B *self, const uint8_t value)
 {
     if (!self->m_init) return FM24CL16B_ERROR_INIT;
 
-    uint32_t writeLen = FM24CL16B_WRITE_LEN;
-    uint32_t pageSize = FM24CL16B_WRITE_LEN;
+    uint32_t write_len = FM24CL16B_WRITE_LEN;
+    uint32_t page_size = FM24CL16B_WRITE_LEN;
 
-    memset(&self->m_data_tx[1], value, writeLen);
+    memset(&self->m_data_tx[1], value, write_len);
 
-    for (uint32_t address = 0; address < FM24CL16B_MAX_ADDRESS; address += writeLen)
+    for (uint32_t address = 0; address < FM24CL16B_MAX_ADDRESS; address += write_len)
     {
-        uint32_t remainingInPage = pageSize - (address % pageSize);
-        uint32_t chunkSize = (writeLen > remainingInPage) ? remainingInPage : writeLen;
+        uint32_t remaining_in_page = page_size - (address % page_size);
+        uint32_t chunk_size = (write_len > remaining_in_page) ? remaining_in_page : write_len;
 
         uint8_t page = (address >> 8) & 0x07;
-		uint8_t addressPageOperation = s_deviceAddressWrite;
-		addressPageOperation |= (page << 1);
+		uint8_t address_page_operation = s_device_address_write;
+		address_page_operation |= (page << 1);
 
 		self->m_data_tx[0] = (uint8_t)(address & 0xFF);
 
-        if (HAL_I2C_Master_Transmit(self->m_hi2c, addressPageOperation, self->m_data_tx, chunkSize + 1, self->m_timeout) != HAL_OK)
+        if (HAL_I2C_Master_Transmit(self->m_hi2c, address_page_operation, self->m_data_tx, chunk_size + 1, self->m_timeout) != HAL_OK)
         {
             return FM24CL16B_ERROR_TX;
         }
@@ -180,44 +180,44 @@ FM24CL16B_State FM24CL16B_print(struct FM24CL16B *self, UART_HandleTypeDef *huar
 {
 	if (!self->m_init) return FM24CL16B_ERROR_INIT;
 
-	uint32_t readLen = 8;
-	uint8_t printBuff[16];
+	uint32_t read_len = 8;
+	uint8_t print_buff[16];
 
-	for (uint32_t address = 0; address < FM24CL16B_MAX_ADDRESS; address += readLen)
+	for (uint32_t address = 0; address < FM24CL16B_MAX_ADDRESS; address += read_len)
 	{
 		uint8_t page = (address >> 8) & 0x07;
-		uint8_t addressPageOperation = s_deviceAddressWrite;
-		addressPageOperation |= (page << 1);
+		uint8_t address_page_operation = s_device_address_write;
+		address_page_operation |= (page << 1);
 
 		self->m_data_tx[0] = (uint8_t)(address & 0xFF);
 
-		if (HAL_I2C_Master_Transmit(self->m_hi2c, addressPageOperation, self->m_data_tx, 1, self->m_timeout) != HAL_OK)
+		if (HAL_I2C_Master_Transmit(self->m_hi2c, address_page_operation, self->m_data_tx, 1, self->m_timeout) != HAL_OK)
 		{
 			return FM24CL16B_ERROR_TX;
 		}
 
-		if (HAL_I2C_Master_Receive(self->m_hi2c, addressPageOperation, self->m_data_rx, readLen, self->m_timeout) != HAL_OK)
+		if (HAL_I2C_Master_Receive(self->m_hi2c, address_page_operation, self->m_data_rx, read_len, self->m_timeout) != HAL_OK)
 		{
 			return FM24CL16B_ERROR_RX;
 		}
 
-		sprintf((char*)printBuff, "%04X:", (uint16_t)address);
-		if (HAL_UART_Transmit(huart, printBuff, strlen((char*)printBuff), FM24CL16B_TIMEOUT_UART) != HAL_OK)
+		sprintf((char*)print_buff, "%04X:", (uint16_t)address);
+		if (HAL_UART_Transmit(huart, print_buff, strlen((char*)print_buff), FM24CL16B_TIMEOUT_UART) != HAL_OK)
 		{
 			return FM24CL16B_ERROR_UART;
 		}
 
-		for (uint32_t byteCtr = 0; byteCtr < readLen; ++byteCtr)
+		for (uint32_t byteCtr = 0; byteCtr < read_len; ++byteCtr)
 		{
-			sprintf((char*)printBuff, " %02X", self->m_data_rx[byteCtr]);
-			if (HAL_UART_Transmit(huart, printBuff, strlen((char*)printBuff), FM24CL16B_TIMEOUT_UART) != HAL_OK)
+			sprintf((char*)print_buff, " %02X", self->m_data_rx[byteCtr]);
+			if (HAL_UART_Transmit(huart, print_buff, strlen((char*)print_buff), FM24CL16B_TIMEOUT_UART) != HAL_OK)
 			{
 				return FM24CL16B_ERROR_UART;
 			}
 		}
 
-		sprintf((char*)printBuff, "\r\n");
-		if (HAL_UART_Transmit(huart, printBuff, strlen((char*)printBuff), FM24CL16B_TIMEOUT_UART) != HAL_OK)
+		sprintf((char*)print_buff, "\r\n");
+		if (HAL_UART_Transmit(huart, print_buff, strlen((char*)print_buff), FM24CL16B_TIMEOUT_UART) != HAL_OK)
 		{
 			return FM24CL16B_ERROR_UART;
 		}
