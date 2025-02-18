@@ -23,11 +23,19 @@ static const uint8_t s_device_address_read	= 0xA1;
  * @param address Device I2C address.
  * @return FM24CL16B_State
  */
+#if FM24CL16B_CMSIS_OS2 == 1
+FM24CL16B_State FM24CL16B_init(struct FM24CL16B *self, I2C_HandleTypeDef *hi2c, osMutexId_t *mutex_handle)
+#else
 FM24CL16B_State FM24CL16B_init(struct FM24CL16B *self, I2C_HandleTypeDef *hi2c)
+#endif
 {
 	self->m_hi2c = hi2c;
 	self->m_init = 1;
 	self->m_timeout = FM24CL16B_DEFAULT_TIMEOUT;
+#if FM24CL16B_CMSIS_OS2 == 1
+	self->m_mutex_handle = mutex_handle;
+	self->m_timeout_mutex = osWaitForever;
+#endif
 
 	return FM24CL16B_OK;
 }
@@ -42,6 +50,9 @@ FM24CL16B_State FM24CL16B_deinit(struct FM24CL16B *self)
 {
 	self->m_hi2c = NULL;
 	self->m_init = 0;
+#if FM24CL16B_CMSIS_OS2 == 1
+	self->m_mutex_handle = NULL;
+#endif
 
 	return FM24CL16B_OK;
 }
@@ -60,11 +71,24 @@ FM24CL16B_State FM24CL16B_write(struct FM24CL16B *self, const uint32_t address, 
 	if (!self->m_init) return FM24CL16B_ERROR_INIT;
 	if (address + len - 1 > FM24CL16B_MAX_ADDRESS) return FM24CL16B_ERROR_ADDRESS;
 
+#if FM24CL16B_CMSIS_OS2 == 1
+	if (osMutexAcquire(*self->m_mutex_handle, self->m_timeout_mutex) != osOK)
+	{
+		return FM24CL16B_ERROR_MUTEX;
+	}
+#endif
+
 #if FM24CL16B_INTERRUPT == 1
 	uint32_t timeout = HAL_GetTick() + self->m_timeout;
 	while (self->m_hi2c->State != HAL_I2C_STATE_READY)
 	{
-		if (HAL_GetTick() > timeout) return FM24CL16B_ERROR_TIMEOUT;
+		if (HAL_GetTick() > timeout)
+		{
+#if FM24CL16B_CMSIS_OS2 == 1
+			osMutexRelease(*self->m_mutex_handle);
+#endif
+			return FM24CL16B_ERROR_TIMEOUT;
+		}
 	}
 #endif
 
@@ -82,8 +106,18 @@ FM24CL16B_State FM24CL16B_write(struct FM24CL16B *self, const uint32_t address, 
 	if (HAL_I2C_Master_Transmit(self->m_hi2c, address_page_operation, self->m_data_tx, len + 1, self->m_timeout) != HAL_OK)
 #endif
 	{
+#if FM24CL16B_CMSIS_OS2 == 1
+		osMutexRelease(*self->m_mutex_handle);
+#endif
 		return FM24CL16B_ERROR_TX;
 	}
+
+#if FM24CL16B_CMSIS_OS2 == 1
+	if (osMutexRelease(*self->m_mutex_handle) != osOK)
+	{
+		return FM24CL16B_ERROR_MUTEX;
+	}
+#endif
 
 	return FM24CL16B_OK;
 }
@@ -102,11 +136,24 @@ FM24CL16B_State FM24CL16B_read(struct FM24CL16B *self, const uint32_t address, u
 	if (!self->m_init) return FM24CL16B_ERROR_INIT;
 	if (address + len - 1 > FM24CL16B_MAX_ADDRESS) return FM24CL16B_ERROR_ADDRESS;
 
+#if FM24CL16B_CMSIS_OS2 == 1
+	if (osMutexAcquire(*self->m_mutex_handle, self->m_timeout_mutex) != osOK)
+	{
+		return FM24CL16B_ERROR_MUTEX;
+	}
+#endif
+
 #if FM24CL16B_INTERRUPT == 1
 	uint32_t timeout = HAL_GetTick() + self->m_timeout;
 	while (self->m_hi2c->State != HAL_I2C_STATE_READY)
 	{
-		if (HAL_GetTick() > timeout) return FM24CL16B_ERROR_TIMEOUT;
+		if (HAL_GetTick() > timeout)
+		{
+#if FM24CL16B_CMSIS_OS2 == 1
+			osMutexRelease(*self->m_mutex_handle);
+#endif
+			return FM24CL16B_ERROR_TIMEOUT;
+		}
 	}
 #endif
 
@@ -118,15 +165,28 @@ FM24CL16B_State FM24CL16B_read(struct FM24CL16B *self, const uint32_t address, u
 
 	if (HAL_I2C_Master_Transmit(self->m_hi2c, address_page_operation, self->m_data_tx, 1, self->m_timeout) != HAL_OK)
 	{
+#if FM24CL16B_CMSIS_OS2 == 1
+		osMutexRelease(*self->m_mutex_handle);
+#endif
 		return FM24CL16B_ERROR_TX;
 	}
 
 	if (HAL_I2C_Master_Receive(self->m_hi2c, address_page_operation, self->m_data_rx, len, self->m_timeout) != HAL_OK)
 	{
+#if FM24CL16B_CMSIS_OS2 == 1
+		osMutexRelease(*self->m_mutex_handle);
+#endif
 		return FM24CL16B_ERROR_RX;
 	}
 
 	memcpy(data, self->m_data_rx, len);
+
+#if FM24CL16B_CMSIS_OS2 == 1
+	if (osMutexRelease(*self->m_mutex_handle) != osOK)
+	{
+		return FM24CL16B_ERROR_MUTEX;
+	}
+#endif
 
 	return FM24CL16B_OK;
 }
@@ -141,6 +201,13 @@ FM24CL16B_State FM24CL16B_read(struct FM24CL16B *self, const uint32_t address, u
 FM24CL16B_State FM24CL16B_reset(struct FM24CL16B *self, const uint8_t value)
 {
     if (!self->m_init) return FM24CL16B_ERROR_INIT;
+
+#if FM24CL16B_CMSIS_OS2 == 1
+	if (osMutexAcquire(*self->m_mutex_handle, self->m_timeout_mutex) != osOK)
+	{
+		return FM24CL16B_ERROR_MUTEX;
+	}
+#endif
 
     uint32_t write_len = FM24CL16B_WRITE_LEN;
     uint32_t page_size = FM24CL16B_WRITE_LEN;
@@ -160,9 +227,19 @@ FM24CL16B_State FM24CL16B_reset(struct FM24CL16B *self, const uint8_t value)
 
         if (HAL_I2C_Master_Transmit(self->m_hi2c, address_page_operation, self->m_data_tx, chunk_size + 1, self->m_timeout) != HAL_OK)
         {
+#if FM24CL16B_CMSIS_OS2 == 1
+			osMutexRelease(*self->m_mutex_handle);
+#endif
             return FM24CL16B_ERROR_TX;
         }
     }
+
+#if FM24CL16B_CMSIS_OS2 == 1
+	if (osMutexRelease(*self->m_mutex_handle) != osOK)
+	{
+		return FM24CL16B_ERROR_MUTEX;
+	}
+#endif
 
     return FM24CL16B_OK;
 }
@@ -180,6 +257,13 @@ FM24CL16B_State FM24CL16B_print(struct FM24CL16B *self, UART_HandleTypeDef *huar
 {
 	if (!self->m_init) return FM24CL16B_ERROR_INIT;
 
+#if FM24CL16B_CMSIS_OS2 == 1
+	if (osMutexAcquire(*self->m_mutex_handle, self->m_timeout_mutex) != osOK)
+	{
+		return FM24CL16B_ERROR_MUTEX;
+	}
+#endif
+
 	uint32_t read_len = 8;
 	uint8_t print_buff[16];
 
@@ -193,17 +277,26 @@ FM24CL16B_State FM24CL16B_print(struct FM24CL16B *self, UART_HandleTypeDef *huar
 
 		if (HAL_I2C_Master_Transmit(self->m_hi2c, address_page_operation, self->m_data_tx, 1, self->m_timeout) != HAL_OK)
 		{
+#if FM24CL16B_CMSIS_OS2 == 1
+			osMutexRelease(*self->m_mutex_handle);
+#endif
 			return FM24CL16B_ERROR_TX;
 		}
 
 		if (HAL_I2C_Master_Receive(self->m_hi2c, address_page_operation, self->m_data_rx, read_len, self->m_timeout) != HAL_OK)
 		{
+#if FM24CL16B_CMSIS_OS2 == 1
+			osMutexRelease(*self->m_mutex_handle);
+#endif
 			return FM24CL16B_ERROR_RX;
 		}
 
 		sprintf((char*)print_buff, "%04X:", (uint16_t)address);
 		if (HAL_UART_Transmit(huart, print_buff, strlen((char*)print_buff), FM24CL16B_TIMEOUT_UART) != HAL_OK)
 		{
+#if FM24CL16B_CMSIS_OS2 == 1
+			osMutexRelease(*self->m_mutex_handle);
+#endif
 			return FM24CL16B_ERROR_UART;
 		}
 
@@ -212,6 +305,9 @@ FM24CL16B_State FM24CL16B_print(struct FM24CL16B *self, UART_HandleTypeDef *huar
 			sprintf((char*)print_buff, " %02X", self->m_data_rx[byteCtr]);
 			if (HAL_UART_Transmit(huart, print_buff, strlen((char*)print_buff), FM24CL16B_TIMEOUT_UART) != HAL_OK)
 			{
+#if FM24CL16B_CMSIS_OS2 == 1
+				osMutexRelease(*self->m_mutex_handle);
+#endif
 				return FM24CL16B_ERROR_UART;
 			}
 		}
@@ -219,9 +315,19 @@ FM24CL16B_State FM24CL16B_print(struct FM24CL16B *self, UART_HandleTypeDef *huar
 		sprintf((char*)print_buff, "\r\n");
 		if (HAL_UART_Transmit(huart, print_buff, strlen((char*)print_buff), FM24CL16B_TIMEOUT_UART) != HAL_OK)
 		{
+#if FM24CL16B_CMSIS_OS2 == 1
+			osMutexRelease(*self->m_mutex_handle);
+#endif
 			return FM24CL16B_ERROR_UART;
 		}
 	}
+
+#if FM24CL16B_CMSIS_OS2 == 1
+	if (osMutexRelease(*self->m_mutex_handle) != osOK)
+	{
+		return FM24CL16B_ERROR_MUTEX;
+	}
+#endif
 
 	return FM24CL16B_OK;
 }
